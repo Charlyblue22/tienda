@@ -1,0 +1,200 @@
+[
+  {
+    "model": "webapp.categoria",
+    "pk": 1,
+    "fields": {
+      "nombre": "Alimentos",
+      "descripcion": "Comida seca, húmeda y snacks."
+    }
+  },
+  {
+    "model": "webapp.categoria",
+    "pk": 2,
+    "fields": {
+      "nombre": "Vacunas",
+      "descripcion": "Vacunas y antiparasitarios (venta con receta veterinaria)."
+    }
+  },
+  {
+    "model": "webapp.categoria",
+    "pk": 3,
+    "fields": {
+      "nombre": "Accesorios",
+      "descripcion": "Correas, camas, juguetes y transporte."
+    }
+  },
+  {
+    "model": "webapp.categoria",
+    "pk": 4,
+    "fields": {
+      "nombre": "Higiene",
+      "descripcion": "Shampoo, arena sanitaria y cuidado diario."
+    }
+  },
+  {
+    "model": "webapp.marca",
+    "pk": 1,
+    "fields": {
+      "nombre": "Royal Canin",
+      "pais_origen": "Francia"
+    }
+  },
+  {
+    "model": "webapp.marca",
+    "pk": 2,
+    "fields": {
+      "nombre": "Pedigree",
+      "pais_origen": "EE.UU."
+    }
+  },
+  {
+    "model": "webapp.marca",
+    "pk": 3,
+    "fields": {
+      "nombre": "Nobivac",
+      "pais_origen": "Países Bajos"
+    }
+  },
+  {
+    "model": "webapp.marca",
+    "pk": 4,
+    "fields": {
+      "nombre": "Kong",
+      "pais_origen": "EE.UU."
+    }
+  },
+  {
+    "model": "webapp.marca",
+    "pk": 5,
+    "fields": {
+      "nombre": "Cat Chow",
+      "pais_origen": "EE.UU."
+    }
+  },
+  {
+    "model": "webapp.producto",
+    "pk": 1,
+    "fields": {
+      "nombre": "Alimento adulto raza mediana 15 kg",
+      "descripcion": "Alimento seco completo para perros adultos.",
+      "precio": 54990,
+      "stock": 25,
+      "especie": "perro",
+      "categoria": 1,
+      "marca": 1,
+      "creado": "2026-10-01T12:00:00-03:00"
+    }
+  },
+  {
+    "model": "webapp.producto",
+    "pk": 2,
+    "fields": {
+      "nombre": "Alimento gatos esterilizados 7,5 kg",
+      "descripcion": "Control de peso y salud urinaria.",
+      "precio": 42990,
+      "stock": 18,
+      "especie": "gato",
+      "categoria": 1,
+      "marca": 5,
+      "creado": "2026-10-02T12:00:00-03:00"
+    }
+  },
+  {
+    "model": "webapp.producto",
+    "pk": 3,
+    "fields": {
+      "nombre": "Snacks dentales para perro",
+      "descripcion": "Ayudan a reducir el sarro.",
+      "precio": 6990,
+      "stock": 60,
+      "especie": "perro",
+      "categoria": 1,
+      "marca": 2,
+      "creado": "2026-10-03T12:00:00-03:00"
+    }
+  },
+  {
+    "model": "webapp.producto",
+    "pk": 4,
+    "fields": {
+      "nombre": "Vacuna múltiple canina (dosis)",
+      "descripcion": "Protege contra distemper, parvovirus y hepatitis.",
+      "precio": 14990,
+      "stock": 40,
+      "especie": "perro",
+      "categoria": 2,
+      "marca": 3,
+      "creado": "2026-10-04T12:00:00-03:00"
+    }
+  },
+  {
+    "model": "webapp.producto",
+    "pk": 5,
+    "fields": {
+      "nombre": "Vacuna triple felina (dosis)",
+      "descripcion": "Rinotraqueítis, calicivirus y panleucopenia.",
+      "precio": 13990,
+      "stock": 30,
+      "especie": "gato",
+      "categoria": 2,
+      "marca": 3,
+      "creado": "2026-10-05T12:00:00-03:00"
+    }
+  },
+  {
+    "model": "webapp.producto",
+    "pk": 6,
+    "fields": {
+      "nombre": "Juguete Kong Classic M",
+      "descripcion": "Resistente, rellenable con snacks.",
+      "precio": 12990,
+      "stock": 35,
+      "especie": "perro",
+      "categoria": 3,
+      "marca": 4,
+      "creado": "2026-10-06T12:00:00-03:00"
+    }
+  },
+  {
+    "model": "webapp.producto",
+    "pk": 7,
+    "fields": {
+      "nombre": "Cama ortopédica talla L",
+      "descripcion": "Espuma viscoelástica, funda lavable.",
+      "precio": 29990,
+      "stock": 12,
+      "especie": "perro",
+      "categoria": 3,
+      "marca": null,
+      "creado": "2026-10-07T12:00:00-03:00"
+    }
+  },
+  {
+    "model": "webapp.producto",
+    "pk": 8,
+    "fields": {
+      "nombre": "Arena sanitaria aglutinante 10 kg",
+      "descripcion": "Control de olores por 10 días.",
+      "precio": 11990,
+      "stock": 50,
+      "especie": "gato",
+      "categoria": 4,
+      "marca": null,
+      "creado": "2026-10-08T12:00:00-03:00"
+    }
+  },
+  {
+    "model": "webapp.producto",
+    "pk": 9,
+    "fields": {
+      "nombre": "Shampoo hipoalergénico 500 ml",
+      "descripcion": "Para piel sensible.",
+      "precio": 8990,
+      "stock": 28,
+      "especie": "todas",
+      "categoria": 4,
+      "marca": null,
+      "creado": "2026-10-09T12:00:00-03:00"
+    }
+  }
+]

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Catálogo de Productos · {{ config_tienda.nombre_tienda }}{% endblock %}
+
+{% block content %}
+<div class="fade-in-up">
+  <!-- Encabezado del Catálogo -->
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small mb-1">
+          <li class="breadcrumb-item"><a href="{% url 'portal_home' %}" class="text-decoration-none">Inicio</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Catálogo</li>
+        </ol>
+      </nav>
+      <h1 class="h3 fw-bold mb-1">Catálogo de Productos</h1>
+      <p class="small text-secondary mb-0">
+        Mostrando <strong>{{ total_resultados }}</strong> producto{{ total_resultados|pluralize }}
+      </p>
+    </div>
+
+    <!-- Píldoras rápidas de especie -->
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'lista_productos' %}"
+         class="species-pill py-1 px-3 small {% if not especie_sel %}active{% endif %}">Todas</a>
+      {% for esp in especies_opciones %}
+      <a href="{% url 'lista_productos' %}?especie={{ esp.valor }}{% if categoria_sel %}&categoria={{ categoria_sel }}{% endif %}"
+         class="species-pill py-1 px-3 small {% if esp.seleccionado %}active{% endif %}">
+        {{ esp.nombre }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Barra de Búsqueda y Filtros -->
+  <div class="card p-3 p-md-4 mb-4">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-12 col-md-4 col-lg-3">
+        <label for="filtroBuscar" class="form-label small fw-bold text-secondary mb-1">Buscar producto</label>
+        <div class="input-group">
+          <span class="input-group-text bg-transparent border-end-0 text-muted"><i class="bi bi-search"></i></span>
+          <input type="text" id="filtroBuscar" name="q" value="{{ q_sel }}" class="form-control border-start-0 ps-0"
+                 placeholder="Nombre, marca o descripción...">
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <label for="filtroCategoria" class="form-label small fw-bold text-secondary mb-1">Categoría</label>
+        <select id="filtroCategoria" name="categoria" class="form-select">
+          <option value="">Todas</option>
+          {% for c in categorias %}
+          <option value="{{ c.id }}" {% if c.seleccionado %}selected{% endif %}>{{ c.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <label for="filtroMarca" class="form-label small fw-bold text-secondary mb-1">Marca</label>
+        <select id="filtroMarca" name="marca" class="form-select">
+          <option value="">Todas</option>
+          {% for m in marcas %}
+          <option value="{{ m.id }}" {% if m.seleccionado %}selected{% endif %}>{{ m.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <label for="filtroEspecie" class="form-label small fw-bold text-secondary mb-1">Especie</label>
+        <select id="filtroEspecie" name="especie" class="form-select">
+          <option value="">Todas</option>
+          {% for esp in especies_opciones %}
+          <option value="{{ esp.valor }}" {% if esp.seleccionado %}selected{% endif %}>{{ esp.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-3">
+        <label for="filtroOrden" class="form-label small fw-bold text-secondary mb-1">Ordenar por</label>
+        <div class="d-flex gap-2">
+          <select id="filtroOrden" name="orden" class="form-select">
+            {% for ord in ordenes_opciones %}
+            <option value="{{ ord.valor }}" {% if ord.seleccionado %}selected{% endif %}>{{ ord.nombre }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-primary px-3" title="Aplicar filtros" aria-label="Aplicar filtros">
+            <i class="bi bi-funnel-fill"></i>
+          </button>
+          {% if hay_filtros %}
+          <a class="btn btn-outline-secondary px-3" href="{% url 'lista_productos' %}" title="Limpiar filtros"
+             aria-label="Limpiar filtros">
+            <i class="bi bi-x-lg"></i>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Grilla de Productos -->
+  <div class="row g-4">
+    {% for p in productos %}
+    <div class="col-12 col-md-6 col-lg-4">
+      {% include '_tarjeta_producto.html' %}
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="card empty-state">
+        <div class="empty-state-icon"><i class="bi bi-search"></i></div>
+        <h3 class="h5 fw-bold mb-2">No encontramos productos con esos filtros</h3>
+        <p class="small text-secondary mb-3">Intenta ajustar tu búsqueda o restablecer los filtros seleccionados.</p>
+        <div>
+          <a href="{% url 'lista_productos' %}" class="btn btn-primary">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Ver todos los productos
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

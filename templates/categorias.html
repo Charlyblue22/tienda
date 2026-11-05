@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Categorías · {{ config_tienda.nombre_tienda }}{% endblock %}
+
+{% block content %}
+<div class="fade-in-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small mb-1">
+          <li class="breadcrumb-item"><a href="{% url 'portal_home' %}" class="text-decoration-none">Inicio</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Categorías</li>
+        </ol>
+      </nav>
+      <h1 class="h3 fw-bold mb-1">Categorías de Productos</h1>
+      <p class="small text-secondary mb-0">Explora nuestras líneas especializadas de alimentación, salud e higiene</p>
+    </div>
+    <a href="{% url 'lista_productos' %}" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-bag-heart me-1"></i>Ver todos los productos
+    </a>
+  </div>
+
+  <div class="row g-4 mb-4">
+    {% for c in categorias %}
+    <div class="col-12 col-md-6">
+      <div class="card card-hover h-100 p-4">
+        <div class="d-flex align-items-start gap-3">
+          <div class="kpi-icon badge-soft-primary fs-3" style="width: 56px; height: 56px;">
+            {% if 'Alimento' in c.nombre %}<i class="bi bi-basket2-fill"></i>
+            {% elif 'Vacuna' in c.nombre %}<i class="bi bi-capsule-pill"></i>
+            {% elif 'Higiene' in c.nombre %}<i class="bi bi-stars"></i>
+            {% else %}<i class="bi bi-box2-heart-fill"></i>{% endif %}
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+              <h2 class="h5 fw-bold mb-0">{{ c.nombre }}</h2>
+              <div class="d-flex gap-2">
+                <span class="badge badge-soft-primary rounded-pill px-3 py-1">{{ c.total }} producto{{ c.total|pluralize }}</span>
+                <span class="badge badge-soft-success rounded-pill px-3 py-1">{{ c.stock_total|default:0 }} uds. stock</span>
+              </div>
+            </div>
+            <p class="text-secondary small mb-3">
+              {{ c.descripcion|default:"Productos seleccionados para el cuidado integral de tu mascota." }}
+            </p>
+            <a href="{% url 'lista_productos' %}?categoria={{ c.id }}" class="btn btn-sm btn-primary">
+              Ver productos de {{ c.nombre }} <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="card empty-state">
+        <div class="empty-state-icon"><i class="bi bi-tags"></i></div>
+        <h3 class="h5 fw-bold">No hay categorías disponibles</h3>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

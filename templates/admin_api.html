@@ -1,0 +1,1026 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Panel de Administración · {{ config_tienda.nombre_tienda }}{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js para gráficos interactivos del Dashboard -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block main_class %}container-fluid px-3 px-lg-4 my-4 flex-grow-1{% endblock %}
+
+{% block content %}
+<div class="admin-shell fade-in-up">
+
+  <!-- =================================================================
+       SIDEBAR DE ADMINISTRACIÓN
+       ================================================================= -->
+  <aside class="admin-sidebar" aria-label="Menú de administración">
+    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+      <div class="d-flex align-items-center gap-2">
+        <span class="brand-icon" style="width: 34px; height: 34px; font-size: 1rem;">
+          <i class="bi bi-shield-check"></i>
+        </span>
+        <div>
+          <div class="fw-bold small lh-1">Centro Admin</div>
+          <small class="text-muted" style="font-size: 0.72rem;">Gestión Integral</small>
+        </div>
+      </div>
+      <span class="badge badge-soft-success rounded-pill px-2 py-1" style="font-size: 0.7rem;">En línea</span>
+    </div>
+
+    <div class="admin-nav-label">Analítica y Finanzas</div>
+    <button type="button" class="admin-nav-btn active" data-section="dashboard">
+      <span><i class="bi bi-grid-1x2-fill me-2"></i>Dashboard</span>
+      <i class="bi bi-chevron-right small opacity-50"></i>
+    </button>
+    <button type="button" class="admin-nav-btn" data-section="ventas">
+      <span><i class="bi bi-receipt-cutoff me-2"></i>Contabilidad Ventas</span>
+      <span class="badge badge-soft-primary rounded-pill" id="navBadgeVentas">{{ metricas.numero_ventas }}</span>
+    </button>
+
+    <div class="admin-nav-label mt-2">Catálogo e Inventario (CRUD)</div>
+    <button type="button" class="admin-nav-btn" data-section="productos">
+      <span><i class="bi bi-box-seam-fill me-2"></i>Productos</span>
+      <span class="badge badge-soft-info rounded-pill" id="navBadgeProductos">{{ metricas.total_productos }}</span>
+    </button>
+    <button type="button" class="admin-nav-btn" data-section="categorias">
+      <span><i class="bi bi-tags-fill me-2"></i>Categorías</span>
+      <span class="badge bg-secondary-subtle text-secondary rounded-pill" id="navBadgeCategorias">{{ metricas.total_categorias }}</span>
+    </button>
+    <button type="button" class="admin-nav-btn" data-section="marcas">
+      <span><i class="bi bi-award-fill me-2"></i>Marcas</span>
+      <span class="badge bg-secondary-subtle text-secondary rounded-pill" id="navBadgeMarcas">{{ metricas.total_marcas }}</span>
+    </button>
+
+    <div class="admin-nav-label mt-2">Sistema y Clientes</div>
+    <button type="button" class="admin-nav-btn" data-section="usuarios">
+      <span><i class="bi bi-people-fill me-2"></i>Usuarios y Clientes</span>
+      <span class="badge bg-secondary-subtle text-secondary rounded-pill" id="navBadgeUsuarios">{{ metricas.total_usuarios }}</span>
+    </button>
+    <button type="button" class="admin-nav-btn" data-section="configuracion">
+      <span><i class="bi bi-sliders me-2"></i>Configuración</span>
+    </button>
+
+    <hr class="my-3">
+    <div class="d-grid gap-2">
+      <button type="button" class="btn btn-sm btn-primary" onclick="AdminApp.abrirModalNuevaVenta()">
+        <i class="bi bi-plus-circle-fill me-1"></i>Registrar Venta
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-primary" onclick="AdminApp.abrirModalProducto()">
+        <i class="bi bi-box-seam me-1"></i>Nuevo Producto
+      </button>
+      <a href="{% url 'portal_home' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-shop me-1"></i>Ver Tienda Pública
+      </a>
+    </div>
+  </aside>
+
+  <!-- =================================================================
+       CONTENIDO PRINCIPAL DEL PANEL
+       ================================================================= -->
+  <div class="admin-main">
+
+    <!-- ===============================================================
+         SECCIÓN A: DASHBOARD EJECUTIVO
+         =============================================================== -->
+    <section id="sec-dashboard" class="admin-section">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Dashboard Ejecutivo</h1>
+          <p class="small text-secondary mb-0">Resumen general de ventas, rendimiento comercial e inventario en tiempo real</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="AdminApp.cargarMetricasDashboard(true)">
+            <i class="bi bi-arrow-clockwise me-1"></i>Actualizar datos
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="AdminApp.abrirModalNuevaVenta()">
+            <i class="bi bi-cart-plus-fill me-1"></i>Nueva Venta
+          </button>
+        </div>
+      </div>
+
+      <!-- Fila 1: Tarjetas Principales de Métricas -->
+      <div class="row g-3 mb-4">
+        <!-- Total de Ventas (Monto) -->
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="small fw-semibold text-secondary d-block">Total de Ventas (Monto)</span>
+                <div class="fs-3 fw-bold text-primary mt-1" id="kpiTotalMonto">${{ metricas.total_ventas_monto|floatformat:"0g" }}</div>
+              </div>
+              <div class="kpi-icon badge-soft-primary"><i class="bi bi-currency-dollar"></i></div>
+            </div>
+            <div class="small text-muted d-flex justify-content-between pt-2 border-top">
+              <span>Ticket prom.: <strong id="kpiTicketPromedio">${{ metricas.ticket_promedio|floatformat:"0g" }}</strong></span>
+              <span class="text-success fw-semibold"><i class="bi bi-check-circle me-1"></i>IVA incl.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Número de Ventas -->
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="small fw-semibold text-secondary d-block">Número de Ventas</span>
+                <div class="fs-3 fw-bold mt-1" id="kpiNumeroVentas">{{ metricas.numero_ventas }}</div>
+              </div>
+              <div class="kpi-icon badge-soft-success"><i class="bi bi-receipt"></i></div>
+            </div>
+            <div class="small text-muted d-flex justify-content-between pt-2 border-top">
+              <span>Pendientes: <strong class="text-warning" id="kpiVentasPendientes">{{ metricas.ventas_pendientes }}</strong></span>
+              <span>Anuladas: <strong class="text-danger" id="kpiVentasCanceladas">{{ metricas.ventas_canceladas }}</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Producto Más Vendido -->
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div class="overflow-hidden">
+                <span class="small fw-semibold text-secondary d-block">Producto Más Vendido</span>
+                <div class="h6 fw-bold mt-2 mb-1 text-truncate" id="kpiTopProductoNombre" title="{{ metricas.producto_mas_vendido.nombre_producto }}">
+                  {{ metricas.producto_mas_vendido.nombre_producto }}
+                </div>
+              </div>
+              <div class="kpi-icon badge-soft-warning"><i class="bi bi-trophy-fill"></i></div>
+            </div>
+            <div class="small text-muted d-flex justify-content-between pt-2 border-top">
+              <span><strong id="kpiTopProductoUnidades">{{ metricas.producto_mas_vendido.unidades }}</strong> uds. vendidas</span>
+              <strong class="text-primary" id="kpiTopProductoIngresos">${{ metricas.producto_mas_vendido.ingresos|floatformat:"0g" }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Productos / Inventario -->
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="kpi-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="small fw-semibold text-secondary d-block">Total Productos / Catálogo</span>
+                <div class="fs-3 fw-bold mt-1" id="kpiTotalProductos">{{ metricas.total_productos }}</div>
+              </div>
+              <div class="kpi-icon badge-soft-indigo"><i class="bi bi-box-seam-fill"></i></div>
+            </div>
+            <div class="small text-muted d-flex justify-content-between pt-2 border-top">
+              <span>Stock: <strong id="kpiUnidadesStock">{{ metricas.unidades_stock }}</strong> uds.</span>
+              <span>Bajo stock: <strong class="text-warning" id="kpiBajoStockCount">{{ metricas.productos_bajo_stock_count }}</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: Desglose Ventas del Día / Semana / Mes -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="card p-3 border-start border-4 border-primary">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <span class="text-uppercase fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Ventas del Día (Hoy)</span>
+                <div class="fs-4 fw-bold mt-1" id="kpiHoyMonto">${{ metricas.ventas_hoy.monto|floatformat:"0g" }}</div>
+                <div class="small text-secondary"><span id="kpiHoyCantidad">{{ metricas.ventas_hoy.cantidad }}</span> venta(s) completada(s) hoy</div>
+              </div>
+              <div class="kpi-icon badge-soft-primary"><i class="bi bi-calendar-day"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card p-3 border-start border-4 border-success">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <span class="text-uppercase fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Ventas de la Semana</span>
+                <div class="fs-4 fw-bold mt-1" id="kpiSemanaMonto">${{ metricas.ventas_semana.monto|floatformat:"0g" }}</div>
+                <div class="small text-secondary"><span id="kpiSemanaCantidad">{{ metricas.ventas_semana.cantidad }}</span> venta(s) esta semana</div>
+              </div>
+              <div class="kpi-icon badge-soft-success"><i class="bi bi-calendar-week"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card p-3 border-start border-4 border-info">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <span class="text-uppercase fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Ventas del Mes Actual</span>
+                <div class="fs-4 fw-bold mt-1" id="kpiMesMonto">${{ metricas.ventas_mes.monto|floatformat:"0g" }}</div>
+                <div class="small text-secondary"><span id="kpiMesCantidad">{{ metricas.ventas_mes.cantidad }}</span> venta(s) en el mes</div>
+              </div>
+              <div class="kpi-icon badge-soft-info"><i class="bi bi-calendar-month"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 3: Gráficos Interactivos -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="card p-4 h-100">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              <div>
+                <h2 class="h5 fw-bold mb-0">Evolución de Ventas por Período</h2>
+                <p class="small text-secondary mb-0">Ingresos brutos en CLP según período seleccionado</p>
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <div class="btn-group btn-group-sm" role="group" aria-label="Período del gráfico">
+                  <button type="button" class="btn btn-outline-primary active" data-chart-period="dias_7">7 Días</button>
+                  <button type="button" class="btn btn-outline-primary" data-chart-period="dias_30">30 Días</button>
+                  <button type="button" class="btn btn-outline-primary" data-chart-period="meses_6">6 Meses</button>
+                </div>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Tipo de gráfico">
+                  <button type="button" class="btn btn-outline-secondary active" data-chart-type="bar" title="Gráfico de barras">
+                    <i class="bi bi-bar-chart-fill"></i> Barras
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary" data-chart-type="line" title="Gráfico de línea">
+                    <i class="bi bi-graph-up"></i> Línea
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div style="position: relative; height: 300px;">
+              <canvas id="ventasPeriodoChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card p-4 h-100">
+            <h2 class="h5 fw-bold mb-1">Ventas por Categoría</h2>
+            <p class="small text-secondary mb-3">Participación de ingresos por línea de negocio</p>
+            <div style="position: relative; height: 220px;" class="mb-3">
+              <canvas id="ventasCategoriaChart"></canvas>
+            </div>
+            <div class="border-top pt-3 mt-auto">
+              <div class="small fw-bold text-secondary mb-2"><i class="bi bi-fire text-warning me-1"></i>Top Productos Vendidos</div>
+              <div id="topProductosList" class="d-flex flex-column gap-2 small"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 4: Tabla de Últimas Ventas -->
+      <div class="card overflow-hidden">
+        <div class="p-3 p-md-4 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h2 class="h5 fw-bold mb-0">Últimas Ventas Registradas</h2>
+            <p class="small text-secondary mb-0">Transacciones más recientes ingresadas en la plataforma</p>
+          </div>
+          <button type="button" class="btn btn-sm btn-soft-primary" onclick="AdminApp.cambiarSeccion('ventas')">
+            Ver Contabilidad Completa <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-modern align-middle">
+            <thead>
+              <tr>
+                <th>Folio</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Productos</th>
+                <th>Pago</th>
+                <th>Estado</th>
+                <th class="text-end">Total</th>
+                <th class="text-end">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tablaUltimasVentasBody">
+              <tr><td colspan="8" class="text-center py-4 text-secondary">Cargando últimas ventas...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================
+         SECCIÓN B: CONTABILIDAD DE VENTAS
+         =============================================================== -->
+    <section id="sec-ventas" class="admin-section d-none">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Contabilidad y Libro de Ventas</h1>
+          <p class="small text-secondary mb-0">Control financiero, cálculo automático de neto e IVA ({{ config_tienda.iva_porcentaje }}%), filtros avanzados y exportación</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="button" class="btn btn-success d-inline-flex align-items-center gap-2" onclick="AdminApp.exportarVentasCSV()">
+            <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+            <span>Exportar a CSV / Excel</span>
+          </button>
+          <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" onclick="AdminApp.abrirModalNuevaVenta()">
+            <i class="bi bi-plus-lg"></i>
+            <span>Registrar Venta</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tarjetas de Resumen Contable (Calculadas automáticamente según filtros) -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+          <div class="card p-3 border-start border-4 border-secondary">
+            <span class="small text-secondary fw-semibold">Subtotal Neto (Sin IVA)</span>
+            <div class="fs-4 fw-bold mt-1" id="contableSubtotalNeto">$0</div>
+            <small class="text-muted">Base imponible filtrada</small>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="card p-3 border-start border-4 border-warning">
+            <span class="small text-secondary fw-semibold">IVA Débito ({{ config_tienda.iva_porcentaje }}%)</span>
+            <div class="fs-4 fw-bold mt-1" id="contableIvaTotal">$0</div>
+            <small class="text-muted">Impuesto calculado</small>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="card p-3 border-start border-4 border-success">
+            <span class="small text-secondary fw-semibold">Total Bruto Recaudado</span>
+            <div class="fs-4 fw-bold text-primary mt-1" id="contableTotalBruto">$0</div>
+            <small class="text-muted">Suma total con IVA</small>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="card p-3 border-start border-4 border-primary">
+            <span class="small text-secondary fw-semibold">Operaciones Válidas</span>
+            <div class="fs-4 fw-bold mt-1" id="contableCantidad">0</div>
+            <small class="text-muted">Ticket prom.: <strong id="contableTicketProm">$0</strong></small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros de Contabilidad -->
+      <div class="card p-3 p-md-4 mb-4">
+        <form id="formFiltrosVentas" class="row g-3 align-items-end" onsubmit="event.preventDefault(); AdminApp.cargarVentas();">
+          <div class="col-12 col-md-3">
+            <label for="ventaFiltroBuscar" class="form-label small fw-bold text-secondary mb-1">Folio o Cliente</label>
+            <input type="text" id="ventaFiltroBuscar" class="form-control form-control-sm" placeholder="Ej: VTA-1001 o nombre...">
+          </div>
+          <div class="col-6 col-md-2">
+            <label for="ventaFiltroDesde" class="form-label small fw-bold text-secondary mb-1">Fecha desde</label>
+            <input type="date" id="ventaFiltroDesde" class="form-control form-control-sm">
+          </div>
+          <div class="col-6 col-md-2">
+            <label for="ventaFiltroHasta" class="form-label small fw-bold text-secondary mb-1">Fecha hasta</label>
+            <input type="date" id="ventaFiltroHasta" class="form-control form-control-sm">
+          </div>
+          <div class="col-6 col-md-2">
+            <label for="ventaFiltroProducto" class="form-label small fw-bold text-secondary mb-1">Producto</label>
+            <select id="ventaFiltroProducto" class="form-select form-select-sm">
+              <option value="">Todos los productos</option>
+              {% for prod in productos_catalogo %}
+              <option value="{{ prod.id }}">{{ prod.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-6 col-md-2">
+            <label for="ventaFiltroEstado" class="form-label small fw-bold text-secondary mb-1">Estado</label>
+            <select id="ventaFiltroEstado" class="form-select form-select-sm">
+              <option value="">Todos</option>
+              <option value="completada">Completada</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="cancelada">Cancelada</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-1 d-flex gap-1">
+            <button type="submit" class="btn btn-sm btn-primary w-100" title="Filtrar ventas">
+              <i class="bi bi-funnel-fill"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="AdminApp.limpiarFiltrosVentas()" title="Limpiar filtros">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          <div class="col-12 pt-2 border-top d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <span class="small text-muted fw-semibold">Período rápido:</span>
+              <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="AdminApp.filtrarPeriodoVentas('')">Todo el historial</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="AdminApp.filtrarPeriodoVentas('hoy')">Hoy</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="AdminApp.filtrarPeriodoVentas('semana')">Esta Semana</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="AdminApp.filtrarPeriodoVentas('mes')">Este Mes</button>
+            </div>
+            <div class="small text-secondary">
+              Mostrando <strong id="ventasCountLabel">0</strong> registro(s)
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tabla Contable de Ventas -->
+      <div class="card overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-modern align-middle">
+            <thead>
+              <tr>
+                <th>Folio</th>
+                <th>Fecha y Hora</th>
+                <th>Cliente</th>
+                <th>Detalle de Productos</th>
+                <th>Medio de Pago</th>
+                <th>Estado</th>
+                <th class="text-end">Subtotal Neto</th>
+                <th class="text-end">IVA (19%)</th>
+                <th class="text-end">Total Bruto</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaContabilidadBody">
+              <tr><td colspan="10" class="text-center py-4 text-secondary">Cargando libro de ventas...</td></tr>
+            </tbody>
+            <tfoot class="table-group-divider fw-bold" style="background-color: var(--bg-surface-alt);">
+              <tr>
+                <td colspan="6" class="text-end py-3">TOTALES DEL PERÍODO FILTRADO:</td>
+                <td class="text-end py-3" id="tfootSubtotalNeto">$0</td>
+                <td class="text-end py-3" id="tfootIvaTotal">$0</td>
+                <td class="text-end py-3 text-primary fs-6" id="tfootTotalBruto">$0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================
+         SECCIÓN C.1: GESTIÓN DE PRODUCTOS (CRUD COMPLETO)
+         =============================================================== -->
+    <section id="sec-productos" class="admin-section d-none">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Gestión de Productos (CRUD)</h1>
+          <p class="small text-secondary mb-0">Crea, consulta, filtra, ordena, edita y elimina productos del catálogo</p>
+        </div>
+        <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" onclick="AdminApp.abrirModalProducto()">
+          <i class="bi bi-plus-circle-fill"></i>
+          <span>Nuevo Producto</span>
+        </button>
+      </div>
+
+      <!-- Barra de búsqueda, filtros, ordenamiento y tamaño de página -->
+      <div class="card p-3 p-md-4 mb-4">
+        <div class="row g-3 align-items-end">
+          <div class="col-12 col-md-4">
+            <label for="prodBuscarInput" class="form-label small fw-bold text-secondary mb-1">Búsqueda instantánea</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-transparent text-muted"><i class="bi bi-search"></i></span>
+              <input type="text" id="prodBuscarInput" class="form-control" placeholder="Buscar por nombre, descripción, marca...">
+            </div>
+          </div>
+          <div class="col-6 col-md-2">
+            <label for="prodFiltroCat" class="form-label small fw-bold text-secondary mb-1">Categoría</label>
+            <select id="prodFiltroCat" class="form-select form-select-sm">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-2">
+            <label for="prodFiltroEspecie" class="form-label small fw-bold text-secondary mb-1">Especie</label>
+            <select id="prodFiltroEspecie" class="form-select form-select-sm">
+              <option value="">Todas</option>
+              {% for valor, nombre in especies %}
+              <option value="{{ valor }}">{{ nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-6 col-md-2">
+            <label for="prodFiltroStock" class="form-label small fw-bold text-secondary mb-1">Estado Stock</label>
+            <select id="prodFiltroStock" class="form-select form-select-sm">
+              <option value="">Todos</option>
+              <option value="disponible">Con stock</option>
+              <option value="bajo">Stock bajo</option>
+              <option value="agotado">Agotados</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-2">
+            <label for="prodOrdenSelect" class="form-label small fw-bold text-secondary mb-1">Ordenar por</label>
+            <select id="prodOrdenSelect" class="form-select form-select-sm">
+              <option value="nombre">Nombre (A-Z)</option>
+              <option value="-nombre">Nombre (Z-A)</option>
+              <option value="precio_asc">Menor precio</option>
+              <option value="precio_desc">Mayor precio</option>
+              <option value="stock_asc">Menor stock</option>
+              <option value="stock_desc">Mayor stock</option>
+              <option value="-id">Más recientes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Productos con Paginación -->
+      <div class="card overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-modern align-middle">
+            <thead>
+              <tr>
+                <th class="sortable-th" onclick="AdminApp.cambiarOrdenProductos('id')">ID <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                <th class="sortable-th" onclick="AdminApp.cambiarOrdenProductos('nombre')">Producto <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                <th>Categoría / Especie</th>
+                <th>Marca</th>
+                <th class="sortable-th text-end" onclick="AdminApp.cambiarOrdenProductos('precio_asc')">Precio CLP <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                <th class="sortable-th text-center" onclick="AdminApp.cambiarOrdenProductos('stock_asc')">Stock <i class="bi bi-arrow-down-up small ms-1"></i></th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaProductosAdminBody">
+              <tr><td colspan="7" class="text-center py-4 text-secondary">Cargando productos...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Controles de Paginación -->
+        <div class="p-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2" style="background-color: var(--bg-surface-alt);">
+          <div class="d-flex align-items-center gap-2 small text-secondary">
+            <span>Filas por página:</span>
+            <select id="prodPageSize" class="form-select form-select-sm" style="width: 75px;">
+              <option value="6">6</option>
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+            </select>
+            <span id="prodPaginationInfo">Mostrando 0 de 0</span>
+          </div>
+          <div class="btn-group btn-group-sm" id="prodPaginationControls"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================
+         SECCIÓN C.2: GESTIÓN DE CATEGORÍAS (CRUD COMPLETO)
+         =============================================================== -->
+    <section id="sec-categorias" class="admin-section d-none">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Gestión de Categorías</h1>
+          <p class="small text-secondary mb-0">Administra las líneas de productos de la tienda</p>
+        </div>
+        <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" onclick="AdminApp.abrirModalCategoria()">
+          <i class="bi bi-plus-circle-fill"></i>
+          <span>Nueva Categoría</span>
+        </button>
+      </div>
+
+      <div class="card overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-modern align-middle">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Nombre de Categoría</th>
+                <th>Descripción</th>
+                <th class="text-center">Productos Asociados</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaCategoriasAdminBody">
+              <tr><td colspan="5" class="text-center py-4 text-secondary">Cargando categorías...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================
+         SECCIÓN C.3: GESTIÓN DE MARCAS (CRUD COMPLETO)
+         =============================================================== -->
+    <section id="sec-marcas" class="admin-section d-none">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Gestión de Marcas</h1>
+          <p class="small text-secondary mb-0">Administra los fabricantes y laboratorios registrados</p>
+        </div>
+        <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" onclick="AdminApp.abrirModalMarca()">
+          <i class="bi bi-plus-circle-fill"></i>
+          <span>Nueva Marca</span>
+        </button>
+      </div>
+
+      <div class="card overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-modern align-middle">
+            <thead>
+              <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Nombre de Marca</th>
+                <th>País de Origen</th>
+                <th class="text-center">Productos Asociados</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaMarcasAdminBody">
+              <tr><td colspan="5" class="text-center py-4 text-secondary">Cargando marcas...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================
+         SECCIÓN D.1: GESTIÓN DE USUARIOS Y CLIENTES
+         =============================================================== -->
+    <section id="sec-usuarios" class="admin-section d-none">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Gestión de Usuarios y Clientes</h1>
+          <p class="small text-secondary mb-0">Control de cuentas, roles de acceso y estado de usuarios</p>
+        </div>
+        <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" onclick="AdminApp.abrirModalUsuario()">
+          <i class="bi bi-person-plus-fill"></i>
+          <span>Nuevo Usuario / Cliente</span>
+        </button>
+      </div>
+
+      <div class="card p-3 mb-4">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-transparent text-muted"><i class="bi bi-search"></i></span>
+              <input type="text" id="userBuscarInput" class="form-control" placeholder="Buscar por usuario, nombre o correo...">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <select id="userFiltroRol" class="form-select form-select-sm">
+              <option value="">Todos los roles</option>
+              <option value="superuser">Superusuario / Admin</option>
+              <option value="staff">Staff / Operador</option>
+              <option value="cliente">Cliente</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="AdminApp.cargarUsuarios()">
+              <i class="bi bi-funnel me-1"></i>Filtrar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-modern align-middle">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Nombre Completo</th>
+                <th>Correo Electrónico</th>
+                <th>Rol / Nivel</th>
+                <th>Estado</th>
+                <th>Registro</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaUsuariosAdminBody">
+              <tr><td colspan="7" class="text-center py-4 text-secondary">Cargando usuarios...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===============================================================
+         SECCIÓN D.2: CONFIGURACIÓN BÁSICA DE LA TIENDA
+         =============================================================== -->
+    <section id="sec-configuracion" class="admin-section d-none">
+      <div class="mb-4">
+        <h1 class="h3 fw-bold mb-1">Configuración General de la Tienda</h1>
+        <p class="small text-secondary mb-0">Personaliza los datos comerciales, parámetros contables (IVA) y alertas de inventario</p>
+      </div>
+
+      <div class="card p-4">
+        <form id="formConfiguracionTienda" onsubmit="event.preventDefault(); AdminApp.guardarConfiguracion();">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="cfgNombre" class="form-label small fw-bold text-secondary">Nombre de la Tienda</label>
+              <input type="text" id="cfgNombre" class="form-control" value="{{ config_tienda.nombre_tienda }}" required>
+            </div>
+            <div class="col-md-6">
+              <label for="cfgEmail" class="form-label small fw-bold text-secondary">Correo de Contacto</label>
+              <input type="email" id="cfgEmail" class="form-control" value="{{ config_tienda.email_contacto }}" required>
+            </div>
+            <div class="col-12">
+              <label for="cfgSlogan" class="form-label small fw-bold text-secondary">Eslogan Principal</label>
+              <input type="text" id="cfgSlogan" class="form-control" value="{{ config_tienda.slogan }}" required>
+            </div>
+            <div class="col-md-4">
+              <label for="cfgTelefono" class="form-label small fw-bold text-secondary">Teléfono / WhatsApp</label>
+              <input type="text" id="cfgTelefono" class="form-control" value="{{ config_tienda.telefono_contacto }}" required>
+            </div>
+            <div class="col-md-4">
+              <label for="cfgDireccion" class="form-label small fw-bold text-secondary">Dirección Comercial</label>
+              <input type="text" id="cfgDireccion" class="form-control" value="{{ config_tienda.direccion }}" required>
+            </div>
+            <div class="col-md-4">
+              <label for="cfgHorario" class="form-label small fw-bold text-secondary">Horario de Atención</label>
+              <input type="text" id="cfgHorario" class="form-control" value="{{ config_tienda.horario_atencion }}" required>
+            </div>
+
+            <div class="col-12"><hr class="my-2"></div>
+
+            <div class="col-md-4">
+              <label for="cfgIva" class="form-label small fw-bold text-secondary">Porcentaje de IVA (%)</label>
+              <input type="number" id="cfgIva" class="form-control" min="0" max="50" value="{{ config_tienda.iva_porcentaje }}" required>
+              <div class="form-text small">Utilizado para el desglose neto/IVA en Contabilidad.</div>
+            </div>
+            <div class="col-md-4">
+              <label for="cfgStockMin" class="form-label small fw-bold text-secondary">Umbral Alerta Bajo Stock (uds.)</label>
+              <input type="number" id="cfgStockMin" class="form-control" min="1" max="500" value="{{ config_tienda.stock_minimo_alerta }}" required>
+              <div class="form-text small">Muestra alertas cuando el stock sea igual o menor.</div>
+            </div>
+            <div class="col-md-4">
+              <label for="cfgEnvioGratis" class="form-label small fw-bold text-secondary">Envío Gratis Desde (CLP)</label>
+              <input type="number" id="cfgEnvioGratis" class="form-control" min="0" step="1000" value="{{ config_tienda.envio_gratis_desde }}" required>
+              <div class="form-text small">Monto mínimo para despacho gratuito en tienda.</div>
+            </div>
+
+            <div class="col-12 pt-3 d-flex justify-content-end">
+              <button type="submit" class="btn btn-primary px-4" id="btnGuardarConfig">
+                <i class="bi bi-check2-circle me-2"></i>Guardar Configuración
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ===================================================================
+     MODALES DE GESTIÓN (PRODUCTO, CATEGORÍA, MARCA, VENTA, USUARIO, CONFIRMACIÓN)
+     =================================================================== -->
+
+<!-- Modal Crear / Editar Producto -->
+<div class="modal fade" id="modalProducto" tabindex="-1" aria-labelledby="modalProductoTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalProductoTitle">Nuevo Producto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form id="formProductoModal" onsubmit="event.preventDefault(); AdminApp.guardarProducto();">
+        <div class="modal-body p-4">
+          <input type="hidden" id="prodIdInput">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label for="prodNombreInput" class="form-label small fw-bold">Nombre del Producto *</label>
+              <input type="text" id="prodNombreInput" class="form-control" maxlength="120" required placeholder="Ej: Alimento Premium Perro Adulto 15 kg">
+            </div>
+            <div class="col-md-4">
+              <label for="prodEspecieInput" class="form-label small fw-bold">Especie *</label>
+              <select id="prodEspecieInput" class="form-select" required>
+                {% for valor, nombre in especies %}
+                <option value="{{ valor }}">{{ nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="prodCategoriaInput" class="form-label small fw-bold">Categoría *</label>
+              <select id="prodCategoriaInput" class="form-select" required></select>
+            </div>
+            <div class="col-md-6">
+              <label for="prodMarcaInput" class="form-label small fw-bold">Marca</label>
+              <select id="prodMarcaInput" class="form-select">
+                <option value="">— Sin marca específica —</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="prodPrecioInput" class="form-label small fw-bold">Precio en CLP *</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" id="prodPrecioInput" class="form-control" min="1" required placeholder="Ej: 24990">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="prodStockInput" class="form-label small fw-bold">Stock Disponible (unidades) *</label>
+              <input type="number" id="prodStockInput" class="form-control" min="0" value="10" required>
+            </div>
+            <div class="col-12">
+              <label for="prodDescInput" class="form-label small fw-bold">Descripción</label>
+              <textarea id="prodDescInput" class="form-control" rows="3" placeholder="Detalles nutricionales, beneficios o modo de uso..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary px-4" id="btnGuardarProducto">
+            <i class="bi bi-check-lg me-1"></i>Guardar Producto
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear / Editar Categoría -->
+<div class="modal fade" id="modalCategoria" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalCategoriaTitle">Nueva Categoría</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form onsubmit="event.preventDefault(); AdminApp.guardarCategoria();">
+        <div class="modal-body p-4">
+          <input type="hidden" id="catIdInput">
+          <div class="mb-3">
+            <label for="catNombreInput" class="form-label small fw-bold">Nombre de Categoría *</label>
+            <input type="text" id="catNombreInput" class="form-control" maxlength="60" required placeholder="Ej: Farmacia Veterinaria">
+          </div>
+          <div class="mb-0">
+            <label for="catDescInput" class="form-label small fw-bold">Descripción</label>
+            <textarea id="catDescInput" class="form-control" rows="3" placeholder="Describe qué productos incluye esta categoría..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary px-4">Guardar Categoría</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear / Editar Marca -->
+<div class="modal fade" id="modalMarca" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalMarcaTitle">Nueva Marca</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form onsubmit="event.preventDefault(); AdminApp.guardarMarca();">
+        <div class="modal-body p-4">
+          <input type="hidden" id="marcaIdInput">
+          <div class="mb-3">
+            <label for="marcaNombreInput" class="form-label small fw-bold">Nombre de la Marca *</label>
+            <input type="text" id="marcaNombreInput" class="form-control" maxlength="60" required placeholder="Ej: Pro Plan">
+          </div>
+          <div class="mb-0">
+            <label for="marcaPaisInput" class="form-label small fw-bold">País de Origen</label>
+            <input type="text" id="marcaPaisInput" class="form-control" maxlength="60" placeholder="Ej: Estados Unidos, Francia, Chile...">
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary px-4">Guardar Marca</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Registrar Nueva Venta (Punto de Venta) -->
+<div class="modal fade" id="modalNuevaVenta" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold"><i class="bi bi-cart-plus-fill text-primary me-2"></i>Registrar Nueva Venta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form onsubmit="event.preventDefault(); AdminApp.guardarNuevaVenta();">
+        <div class="modal-body p-4">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="ventaClienteNombre" class="form-label small fw-bold">Nombre del Cliente *</label>
+              <input type="text" id="ventaClienteNombre" class="form-control" required placeholder="Ej: María José Soto">
+            </div>
+            <div class="col-md-6">
+              <label for="ventaClienteEmail" class="form-label small fw-bold">Correo Electrónico</label>
+              <input type="email" id="ventaClienteEmail" class="form-control" placeholder="cliente@correo.cl">
+            </div>
+            <div class="col-md-6">
+              <label for="ventaMetodoPago" class="form-label small fw-bold">Método de Pago *</label>
+              <select id="ventaMetodoPago" class="form-select" required>
+                <option value="tarjeta">Tarjeta Débito / Crédito</option>
+                <option value="transferencia">Transferencia Bancaria</option>
+                <option value="efectivo">Efectivo</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="ventaEstadoSelect" class="form-label small fw-bold">Estado de la Venta *</label>
+              <select id="ventaEstadoSelect" class="form-select" required>
+                <option value="completada">Completada (Descuenta stock)</option>
+                <option value="pendiente">Pendiente de pago</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label small fw-bold mb-0">Productos de la Venta *</label>
+            <button type="button" class="btn btn-sm btn-soft-primary" onclick="AdminApp.agregarLineaVenta()">
+              <i class="bi bi-plus-lg me-1"></i>Agregar Línea
+            </button>
+          </div>
+          <div id="lineasVentaContainer" class="d-flex flex-column gap-2 mb-3"></div>
+
+          <div class="p-3 rounded-3 d-flex flex-wrap justify-content-between align-items-center" style="background-color: var(--bg-surface-alt);">
+            <div class="small text-secondary">
+              Neto estimado: <strong id="posSubtotalNeto">$0</strong> · IVA: <strong id="posIva">$0</strong>
+            </div>
+            <div class="fs-5 fw-bold text-primary">
+              Total Venta: <span id="posTotalBruto">$0</span>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label for="ventaNotasInput" class="form-label small fw-bold">Notas u Observaciones</label>
+            <input type="text" id="ventaNotasInput" class="form-control form-control-sm" placeholder="Opcional: Despacho, receta veterinaria, etc.">
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check2-circle me-1"></i>Confirmar y Registrar Venta
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detalle de Venta / Comprobante -->
+<div class="modal fade" id="modalDetalleVenta" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalDetalleVentaTitle">Comprobante de Venta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-4" id="modalDetalleVentaBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear / Editar Usuario -->
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold" id="modalUsuarioTitle">Nuevo Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form onsubmit="event.preventDefault(); AdminApp.guardarUsuario();">
+        <div class="modal-body p-4">
+          <input type="hidden" id="userIdInput">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="userUsernameInput" class="form-label small fw-bold">Nombre de Usuario *</label>
+              <input type="text" id="userUsernameInput" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label for="userRolInput" class="form-label small fw-bold">Rol en Plataforma *</label>
+              <select id="userRolInput" class="form-select" required>
+                <option value="cliente">Cliente</option>
+                <option value="staff">Staff / Operador</option>
+                <option value="superuser">Superusuario / Admin</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="userFirstNameInput" class="form-label small fw-bold">Nombre</label>
+              <input type="text" id="userFirstNameInput" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <label for="userLastNameInput" class="form-label small fw-bold">Apellido</label>
+              <input type="text" id="userLastNameInput" class="form-control">
+            </div>
+            <div class="col-12">
+              <label for="userEmailInput" class="form-label small fw-bold">Correo Electrónico</label>
+              <input type="email" id="userEmailInput" class="form-control">
+            </div>
+            <div class="col-12">
+              <label for="userPasswordInput" class="form-label small fw-bold" id="userPasswordLabel">Contraseña *</label>
+              <input type="password" id="userPasswordInput" class="form-control" minlength="6" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="userActiveCheck" checked>
+                <label class="form-check-label small fw-semibold" for="userActiveCheck">Cuenta activa</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary px-4">Guardar Usuario</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmación de Eliminación -->
+<div class="modal fade" id="modalConfirmarEliminar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 text-center p-3">
+      <div class="modal-body">
+        <div class="kpi-icon badge-soft-danger mx-auto mb-3 rounded-circle" style="width: 56px; height: 56px;">
+          <i class="bi bi-trash3-fill fs-4"></i>
+        </div>
+        <h5 class="fw-bold mb-2">¿Confirmar eliminación?</h5>
+        <p class="small text-secondary mb-4" id="confirmarEliminarTexto">Esta acción no se puede deshacer.</p>
+        <div class="d-flex gap-2 justify-content-center">
+          <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-sm btn-danger px-3" id="btnConfirmarEliminarAccion">Sí, eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Configuración inicial inyectada para carga instantánea -->
+<script>
+  window.INITIAL_ADMIN_SECTION = "{{ seccion_activa|escapejs }}";
+</script>
+<script src="{% static 'js/admin_panel.js' %}"></script>
+{% endblock %}

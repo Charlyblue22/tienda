@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}{{ producto.nombre }} · {{ config_tienda.nombre_tienda }}{% endblock %}
+
+{% block content %}
+<div class="fade-in-up">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'portal_home' %}" class="text-decoration-none">Inicio</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'lista_productos' %}" class="text-decoration-none">Productos</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'lista_productos' %}?categoria={{ producto.categoria.id }}" class="text-decoration-none">{{ producto.categoria.nombre }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ producto.nombre }}</li>
+    </ol>
+  </nav>
+
+  <div class="card p-4 p-lg-5 mb-5">
+    <div class="row g-4 g-lg-5 align-items-center">
+      <!-- Visual del Producto -->
+      <div class="col-lg-5">
+        <div class="rounded-4 p-5 text-center position-relative d-flex flex-column align-items-center justify-content-center"
+             style="min-height: 340px; background: linear-gradient(135deg, var(--bg-surface-alt) 0%, var(--primary-soft) 100%); border: 1px solid var(--border-color);">
+          <div class="position-absolute top-0 start-0 p-3 d-flex gap-2">
+            <span class="badge badge-soft-primary px-3 py-2">{{ producto.categoria.nombre }}</span>
+            <span class="badge bg-surface border text-secondary px-3 py-2" style="background: var(--bg-surface);">
+              {{ producto.get_especie_display }}
+            </span>
+          </div>
+
+          <div class="rounded-4 shadow-sm d-inline-flex align-items-center justify-content-center my-4"
+               style="width: 110px; height: 110px; background: var(--bg-surface); color: var(--primary); font-size: 3.2rem;">
+            {% if 'Alimento' in producto.categoria.nombre %}
+              <i class="bi bi-basket2-fill"></i>
+            {% elif 'Vacuna' in producto.categoria.nombre %}
+              <i class="bi bi-capsule-pill"></i>
+            {% elif 'Higiene' in producto.categoria.nombre %}
+              <i class="bi bi-stars"></i>
+            {% else %}
+              <i class="bi bi-box2-heart-fill"></i>
+            {% endif %}
+          </div>
+
+          <div class="small text-secondary mt-2">
+            Código SKU: <strong>PAT-{{ producto.id|stringformat:"04d" }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información y Compra -->
+      <div class="col-lg-7">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+          <span class="text-uppercase fw-bold small text-primary" style="letter-spacing: 0.06em;">
+            <i class="bi bi-award me-1"></i>{{ producto.marca.nombre|default:"Línea Exclusiva Patitas" }}
+          </span>
+          {% if producto.stock > 10 %}
+            <span class="badge badge-soft-success px-3 py-2 rounded-pill">
+              <i class="bi bi-check-circle-fill me-1"></i>Disponible ({{ producto.stock }} unidades)
+            </span>
+          {% elif producto.stock > 0 %}
+            <span class="badge badge-soft-warning px-3 py-2 rounded-pill">
+              <i class="bi bi-exclamation-circle-fill me-1"></i>Últimas {{ producto.stock }} unidades disponibles
+            </span>
+          {% else %}
+            <span class="badge badge-soft-danger px-3 py-2 rounded-pill">
+              <i class="bi bi-x-circle-fill me-1"></i>Sin stock temporalmente
+            </span>
+          {% endif %}
+        </div>
+
+        <h1 class="h2 fw-bold mb-3">{{ producto.nombre }}</h1>
+
+        <p class="text-secondary mb-4">
+          {{ producto.descripcion|default:"Producto seleccionado con altos estándares de calidad para el cuidado y bienestar integral de tu mascota." }}
+        </p>
+
+        <div class="p-3 rounded-3 mb-4 d-flex flex-wrap align-items-baseline justify-content-between gap-2"
+             style="background-color: var(--bg-surface-alt); border: 1px solid var(--border-color);">
+          <div>
+            <span class="small text-muted d-block">Precio final (IVA {{ config_tienda.iva_porcentaje }}% incluido)</span>
+            <span class="display-6 fw-bold text-primary">${{ producto.precio|floatformat:"0g" }} <small class="fs-6 fw-normal text-secondary">CLP</small></span>
+          </div>
+          <div class="small text-secondary">
+            <i class="bi bi-truck text-success me-1"></i>
+            {% if producto.precio >= config_tienda.envio_gratis_desde %}
+              <strong>¡Califica para envío gratis!</strong>
+            {% else %}
+              Envío gratis en compras sobre ${{ config_tienda.envio_gratis_desde|floatformat:"0g" }}
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Especificaciones rápidas -->
+        <div class="row g-2 mb-4 small">
+          <div class="col-6 col-sm-4">
+            <div class="p-2 rounded border">
+              <span class="text-muted d-block">Categoría</span>
+              <strong>{{ producto.categoria.nombre }}</strong>
+            </div>
+          </div>
+          <div class="col-6 col-sm-4">
+            <div class="p-2 rounded border">
+              <span class="text-muted d-block">Marca</span>
+              <strong>{{ producto.marca.nombre|default:"Genérica" }}</strong>
+            </div>
+          </div>
+          <div class="col-12 col-sm-4">
+            <div class="p-2 rounded border">
+              <span class="text-muted d-block">Especie recomendada</span>
+              <strong>{{ producto.get_especie_display }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formulario de Compra Rápida -->
+        {% if producto.stock > 0 %}
+        <form method="post" action="{% url 'comprar_producto' %}" class="p-3 rounded-3 border mb-3" style="background: var(--bg-surface);">
+          {% csrf_token %}
+          <input type="hidden" name="producto_id" value="{{ producto.id }}">
+          <div class="fw-bold small mb-2 text-secondary">
+            <i class="bi bi-bag-check-fill text-primary me-1"></i>Compra directa e inmediata
+          </div>
+          <div class="row g-2 align-items-end">
+            <div class="col-4 col-sm-3">
+              <label for="inputCantidad" class="form-label small text-muted mb-1">Cantidad</label>
+              <input type="number" id="inputCantidad" name="cantidad" class="form-control form-control-sm" value="1" min="1" max="{{ producto.stock }}" required>
+            </div>
+            <div class="col-8 col-sm-5">
+              <label for="inputCliente" class="form-label small text-muted mb-1">Tu nombre</label>
+              <input type="text" id="inputCliente" name="cliente_nombre" class="form-control form-control-sm"
+                     value="{% if user.is_authenticated %}{{ user.username }}{% endif %}" placeholder="Nombre comprador" required>
+            </div>
+            <div class="col-12 col-sm-4">
+              <label for="inputMetodo" class="form-label small text-muted mb-1">Medio de pago</label>
+              <select id="inputMetodo" name="metodo_pago" class="form-select form-select-sm">
+                <option value="tarjeta">Tarjeta Débito/Crédito</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="efectivo">Efectivo en tienda</option>
+              </select>
+            </div>
+            <div class="col-12 mt-2 d-flex flex-wrap gap-2">
+              <button type="submit" class="btn btn-primary flex-grow-1">
+                <i class="bi bi-cart-check-fill me-2"></i>Comprar Ahora
+              </button>
+              <a href="{% url 'lista_productos' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Seguir viendo
+              </a>
+            </div>
+          </div>
+        </form>
+        {% else %}
+        <div class="d-flex gap-2">
+          <button class="btn btn-secondary" disabled>
+            <i class="bi bi-x-circle me-1"></i>Producto sin stock
+          </button>
+          <a href="{% url 'lista_productos' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-1"></i>Volver al catálogo
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Productos relacionados -->
+  {% if relacionados %}
+  <section class="mb-4">
+    <h2 class="h4 fw-bold mb-3">También te puede interesar</h2>
+    <div class="row g-4">
+      {% for p in relacionados %}
+      <div class="col-12 col-md-6 col-lg-4">
+        {% include '_tarjeta_producto.html' %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

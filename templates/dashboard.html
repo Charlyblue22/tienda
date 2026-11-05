@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% block title %}Inicio · {{ config_tienda.nombre_tienda }}{% endblock %}
+
+{% block content %}
+<!-- Hero Principal -->
+<section class="hero-modern mb-4 fade-in-up">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-7">
+      <div class="hero-badge mb-3">
+        <i class="bi bi-stars"></i>
+        <span>Tienda Oficial &amp; Cuidado Veterinario</span>
+      </div>
+      <h1 class="display-5 fw-bold mb-3">Todo para la felicidad y salud de tu mascota</h1>
+      <p class="lead mb-4" style="color: rgba(255,255,255,0.82); max-width: 580px;">
+        {{ config_tienda.slogan }}. Encuentra alimentos super premium, vacunas, accesorios y productos de higiene con disponibilidad inmediata.
+      </p>
+      <div class="d-flex flex-wrap gap-3">
+        <a class="btn btn-primary btn-lg px-4" href="{% url 'lista_productos' %}">
+          <i class="bi bi-bag-heart-fill me-2"></i>Explorar Catálogo
+        </a>
+        <a class="btn btn-outline-light btn-lg px-4" href="{% url 'lista_categorias' %}">
+          <i class="bi bi-grid me-2"></i>Ver Categorías
+        </a>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="row g-3">
+        <div class="col-6">
+          <div class="hero-stat-pill">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <span class="small text-white-50">Catálogo Activo</span>
+              <i class="bi bi-box-seam text-warning fs-5"></i>
+            </div>
+            <div class="fs-2 fw-bold text-white">{{ total_productos }}</div>
+            <div class="small text-white-50">Productos seleccionados</div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="hero-stat-pill">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <span class="small text-white-50">Stock Disponible</span>
+              <i class="bi bi-stack text-info fs-5"></i>
+            </div>
+            <div class="fs-2 fw-bold text-white">{{ unidades_stock }}</div>
+            <div class="small text-white-50">Unidades listas para envío</div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="hero-stat-pill d-flex align-items-center justify-content-between">
+            <div>
+              <div class="small text-white-50">Marcas Certificadas</div>
+              <div class="fs-4 fw-bold text-white">{{ total_marcas }} marcas internacionales</div>
+            </div>
+            <a href="{% url 'lista_marcas' %}" class="btn btn-sm btn-light fw-semibold">
+              Conocer marcas <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Acceso rápido por especie -->
+<section class="mb-5 fade-in-up stagger-1" aria-label="Filtrar por especie">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <h2 class="h6 fw-bold text-uppercase text-muted mb-0" style="letter-spacing: 0.06em;">
+      <i class="bi bi-funnel me-1 text-primary"></i>Compra según tu mascota
+    </h2>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{% url 'lista_productos' %}" class="species-pill">
+      <span>🐾</span><span>Todo el catálogo</span>
+    </a>
+    <a href="{% url 'lista_productos' %}?especie=perro" class="species-pill">
+      <span>🐶</span><span>Perros</span>
+    </a>
+    <a href="{% url 'lista_productos' %}?especie=gato" class="species-pill">
+      <span>🐱</span><span>Gatos</span>
+    </a>
+    <a href="{% url 'lista_productos' %}?especie=ave" class="species-pill">
+      <span>🦜</span><span>Aves</span>
+    </a>
+    <a href="{% url 'lista_productos' %}?especie=roedor" class="species-pill">
+      <span>🐹</span><span>Roedores</span>
+    </a>
+    <a href="{% url 'lista_productos' %}?especie=todas" class="species-pill">
+      <span>✨</span><span>Uso General</span>
+    </a>
+  </div>
+</section>
+
+<!-- Categorías Principales -->
+<section class="mb-5 fade-in-up stagger-2">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+      <h2 class="h4 fw-bold mb-1">Categorías Especializadas</h2>
+      <p class="small text-secondary mb-0">Encuentra exactamente lo que necesitas en nuestras líneas de cuidado</p>
+    </div>
+    <a href="{% url 'lista_categorias' %}" class="btn btn-sm btn-soft-primary">
+      Ver todas <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  <div class="row g-3">
+    {% for c in categorias %}
+    <div class="col-12 col-sm-6 col-lg-3">
+      <a href="{% url 'lista_productos' %}?categoria={{ c.id }}" class="text-decoration-none">
+        <div class="card card-hover h-100 p-3">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class="kpi-icon badge-soft-primary">
+                {% if 'Alimento' in c.nombre %}<i class="bi bi-basket2-fill"></i>
+                {% elif 'Vacuna' in c.nombre %}<i class="bi bi-capsule-pill"></i>
+                {% elif 'Higiene' in c.nombre %}<i class="bi bi-stars"></i>
+                {% else %}<i class="bi bi-box2-heart-fill"></i>{% endif %}
+              </div>
+              <span class="badge badge-soft-info rounded-pill px-3 py-1">
+                {{ c.total }} producto{{ c.total|pluralize }}
+              </span>
+            </div>
+            <h3 class="h5 fw-bold mb-1">{{ c.nombre }}</h3>
+            <p class="small text-secondary mb-3 flex-grow-1">{{ c.descripcion|default:"Productos especializados para mascotas." }}</p>
+            <div class="small fw-semibold text-primary d-flex align-items-center gap-1 mt-auto">
+              <span>Explorar categoría</span>
+              <i class="bi bi-chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state card">
+        <div class="empty-state-icon"><i class="bi bi-tags"></i></div>
+        <h5>No hay categorías registradas</h5>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Productos Destacados -->
+<section class="mb-5 fade-in-up stagger-3">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+      <h2 class="h4 fw-bold mb-1">Productos Destacados</h2>
+      <p class="small text-secondary mb-0">Últimas incorporaciones y favoritos de nuestros clientes</p>
+    </div>
+    <a href="{% url 'lista_productos' %}" class="btn btn-sm btn-outline-primary">
+      Ver catálogo completo <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  <div class="row g-4">
+    {% for p in destacados %}
+    <div class="col-12 col-md-6 col-lg-4">
+      {% include '_tarjeta_producto.html' %}
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="empty-state card">
+        <div class="empty-state-icon"><i class="bi bi-box-seam"></i></div>
+        <h5 class="fw-bold">Aún no hay productos en el catálogo</h5>
+        <p class="small text-secondary mb-3">Agrega productos desde el Panel de Administración para comenzar.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Beneficios de la tienda -->
+<section class="row g-3 mb-2">
+  <div class="col-md-4">
+    <div class="card border-0 p-3 h-100" style="background-color: var(--bg-surface-alt);">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon badge-soft-primary"><i class="bi bi-truck"></i></div>
+        <div>
+          <h3 class="h6 fw-bold mb-1">Despacho Rápido a Todo Chile</h3>
+          <p class="small text-secondary mb-0">Envíos gratuitos en compras sobre ${{ config_tienda.envio_gratis_desde|floatformat:"0g" }} CLP.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card border-0 p-3 h-100" style="background-color: var(--bg-surface-alt);">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon badge-soft-success"><i class="bi bi-shield-check"></i></div>
+        <div>
+          <h3 class="h6 fw-bold mb-1">Respaldo Veterinario</h3>
+          <p class="small text-secondary mb-0">Alimentos y vacunas con cadena de frío y registro oficial.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card border-0 p-3 h-100" style="background-color: var(--bg-surface-alt);">
+      <div class="d-flex align-items-center gap-3">
+        <div class="kpi-icon badge-soft-indigo"><i class="bi bi-credit-card-2-front"></i></div>
+        <div>
+          <h3 class="h6 fw-bold mb-1">Múltiples Medios de Pago</h3>
+          <p class="small text-secondary mb-0">Tarjetas de débito, crédito y transferencia bancaria inmediata.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Iniciar Sesión · {{ config_tienda.nombre_tienda }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-4 fade-in-up">
+  <div class="col-12 col-sm-10 col-md-7 col-lg-5">
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+      <!-- Encabezado -->
+      <div class="p-4 text-center text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #ff5a36 100%);">
+        <div class="mb-3">
+          <span class="d-inline-flex align-items-center justify-content-center rounded-4 shadow"
+                style="width: 64px; height: 64px; background: rgba(255,255,255,0.14); backdrop-filter: blur(8px);">
+            <i class="bi bi-shield-lock-fill text-white fs-2"></i>
+          </span>
+        </div>
+        <h1 class="h4 fw-bold text-white mb-1">Bienvenido a {{ config_tienda.nombre_tienda }}</h1>
+        <p class="mb-0 small text-white-50">Ingresa tus credenciales para acceder a tu cuenta o al Panel de Administración</p>
+      </div>
+
+      <!-- Formulario -->
+      <div class="card-body p-4 p-md-5">
+        <form method="post" action="{% url 'login' %}" novalidate>
+          {% csrf_token %}
+          {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+          {% endif %}
+
+          <div class="mb-3">
+            <label for="id_username" class="form-label fw-semibold small text-secondary">
+              Nombre de usuario
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-transparent text-muted"><i class="bi bi-person"></i></span>
+              <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required
+                     id="id_username" class="form-control" placeholder="Ingresa tu usuario">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="id_password" class="form-label fw-semibold small text-secondary">
+              Contraseña
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-transparent text-muted"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" autocomplete="current-password" required
+                     id="id_password" class="form-control" placeholder="••••••••">
+              <button class="btn btn-outline-secondary" type="button" id="togglePwdBtn" aria-label="Mostrar u ocultar contraseña">
+                <i class="bi bi-eye" id="togglePwdIcon"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="d-grid mb-3">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+            </button>
+          </div>
+        </form>
+
+        <div class="p-3 rounded-3 small mt-4" style="background-color: var(--bg-surface-alt); border: 1px solid var(--border-color);">
+          <div class="d-flex align-items-start gap-2 text-secondary">
+            <i class="bi bi-shield-check text-primary fs-5"></i>
+            <div>
+              <strong>Acceso seguro:</strong> El Panel de Administración integral está protegido con control de roles para administradores autorizados.
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-4">
+          <a href="{% url 'portal_home' %}" class="text-decoration-none text-secondary small fw-semibold">
+            <i class="bi bi-arrow-left me-1"></i>Volver a la tienda
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const btn = document.getElementById('togglePwdBtn');
+    const input = document.getElementById('id_password');
+    const icon = document.getElementById('togglePwdIcon');
+    if (btn && input && icon) {
+      btn.addEventListener('click', function () {
+        const isPwd = input.type === 'password';
+        input.type = isPwd ? 'text' : 'password';
+        icon.className = isPwd ? 'bi bi-eye-slash' : 'bi bi-eye';
+      });
+    }
+  })();
+</script>
+{% endblock %}

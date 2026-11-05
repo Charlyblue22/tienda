@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Gestión Administrativa · {{ config_tienda.nombre_tienda }}{% endblock %}
+
+{% block content %}
+<div class="py-4 fade-in-up">
+  <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 text-center mx-auto" style="max-width: 680px;">
+    <div class="icon-box-lg bg-success-subtle text-success mx-auto mb-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+      <i class="bi bi-shield-check fs-2"></i>
+    </div>
+    <h1 class="h3 fw-bold mb-2">Centro de Administración Integrado</h1>
+    <p class="text-secondary mb-4">
+      Toda la gestión de inventario, contabilidad de ventas, reportes, usuarios y configuración se realiza directamente desde el Panel de Administración sin necesidad de herramientas externas.
+    </p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{% url 'admin_api' %}" class="btn btn-primary px-4">
+        <i class="bi bi-speedometer2 me-2"></i>Abrir Panel de Administración
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

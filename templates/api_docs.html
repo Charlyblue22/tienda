@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Información del Sistema · {{ config_tienda.nombre_tienda }}{% endblock %}
+
+{% block content %}
+<div class="py-4 fade-in-up">
+  <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 text-center mx-auto" style="max-width: 680px;">
+    <div class="icon-box-lg bg-primary-subtle text-primary mx-auto mb-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+      <i class="bi bi-shop fs-2"></i>
+    </div>
+    <h1 class="h3 fw-bold mb-2">{{ config_tienda.nombre_tienda }} · Plataforma Digital</h1>
+    <p class="text-secondary mb-4">
+      Catálogo en línea y sistema de gestión comercial integrado. Explora nuestros productos para mascotas o accede al panel de administración si cuentas con credenciales autorizadas.
+    </p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+      <a href="{% url 'lista_productos' %}" class="btn btn-primary px-4">
+        <i class="bi bi-bag-heart me-2"></i>Explorar Catálogo
+      </a>
+      {% if user.is_superuser %}
+      <a href="{% url 'admin_api' %}" class="btn btn-outline-primary px-4">
+        <i class="bi bi-grid-1x2-fill me-2"></i>Ir al Panel de Administración
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

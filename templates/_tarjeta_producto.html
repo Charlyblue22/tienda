@@ -1,0 +1,61 @@
+<article class="product-card">
+  <div class="product-visual">
+    <div class="product-badges-top">
+      <span class="badge badge-soft-primary px-2 py-1">{{ p.categoria.nombre }}</span>
+      <span class="badge bg-surface text-secondary border px-2 py-1" style="background: var(--bg-surface);">
+        {% if p.especie == 'perro' %}🐶 Perro
+        {% elif p.especie == 'gato' %}🐱 Gato
+        {% elif p.especie == 'ave' %}🦜 Ave
+        {% elif p.especie == 'roedor' %}🐹 Roedor
+        {% else %}🐾 {{ p.get_especie_display }}{% endif %}
+      </span>
+    </div>
+    <div class="product-visual-icon" aria-hidden="true">
+      {% if 'Alimento' in p.categoria.nombre %}
+        <i class="bi bi-basket2-fill"></i>
+      {% elif 'Vacuna' in p.categoria.nombre %}
+        <i class="bi bi-capsule-pill"></i>
+      {% elif 'Higiene' in p.categoria.nombre %}
+        <i class="bi bi-stars"></i>
+      {% else %}
+        <i class="bi bi-box2-heart-fill"></i>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card-body d-flex flex-column p-3 p-md-4">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+      <span class="text-uppercase fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+        {{ p.marca.nombre|default:"Marca Propia" }}
+      </span>
+      {% if p.stock > 10 %}
+        <span class="badge badge-soft-success rounded-pill"><i class="bi bi-check2-circle me-1"></i>{{ p.stock }} en stock</span>
+      {% elif p.stock > 0 %}
+        <span class="badge badge-soft-warning rounded-pill"><i class="bi bi-fire me-1"></i>¡Últimas {{ p.stock }}!</span>
+      {% else %}
+        <span class="badge badge-soft-danger rounded-pill"><i class="bi bi-x-circle me-1"></i>Agotado</span>
+      {% endif %}
+    </div>
+
+    <h3 class="h6 fw-bold mb-1">
+      <a href="{% url 'detalle_producto' p.pk %}" class="text-decoration-none" style="color: var(--text-main);">
+        {{ p.nombre }}
+      </a>
+    </h3>
+
+    <p class="small text-secondary mb-3 flex-grow-1">
+      {{ p.descripcion|default:"Calidad garantizada para el cuidado diario de tu mascota."|truncatechars:75 }}
+    </p>
+
+    <div class="pt-3 border-top d-flex justify-content-between align-items-center mt-auto">
+      <div>
+        <div class="text-muted" style="font-size: 0.7rem;">Precio</div>
+        <div class="precio">${{ p.precio|floatformat:"0g" }}</div>
+      </div>
+      <a href="{% url 'detalle_producto' p.pk %}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
+        <span>Ver producto</span>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</article>
